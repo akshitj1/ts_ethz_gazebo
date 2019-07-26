@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include <boost/bind.hpp>
-#include <Eigen/Eigen>
+//#include <Eigen/Eigen>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
@@ -35,8 +35,13 @@
 #include "MotorSpeed.pb.h"
 #include "Float.pb.h"
 
-#include "common.h"
+#include "thread"
+#include <ros/ros.h>
+#include <ros/callback_queue.h>
+#include <ros/subscribe_options.h>
+#include "std_msgs/Float32.h"
 
+#include "common.h"
 
 namespace turning_direction {
 const static int CCW = 1;
@@ -72,39 +77,47 @@ static constexpr double kDefaultRotorVelocitySlowdownSim = 10.0;
 class GazeboMotorModel : public MotorModel, public ModelPlugin {
  public:
   GazeboMotorModel()
-      : ModelPlugin(),
-        MotorModel(),
-        command_sub_topic_(kDefaultCommandSubTopic),
-        motor_failure_sub_topic_(kDefaultMotorFailureNumSubTopic),
-        motor_speed_pub_topic_(kDefaultMotorVelocityPubTopic),
-        motor_number_(0),
-        motor_Failure_Number_(0),
-        turning_direction_(turning_direction::CW),
-        max_force_(kDefaultMaxForce),
-        max_rot_velocity_(kDefaulMaxRotVelocity),
-        moment_constant_(kDefaultMomentConstant),
-        motor_constant_(kDefaultMotorConstant),
-        //motor_test_sub_topic_(kDefaultMotorTestSubTopic),
-        ref_motor_rot_vel_(0.0),
-        rolling_moment_coefficient_(kDefaultRollingMomentCoefficient),
-        rotor_drag_coefficient_(kDefaultRotorDragCoefficient),
-        rotor_velocity_slowdown_sim_(kDefaultRotorVelocitySlowdownSim),
-        time_constant_down_(kDefaultTimeConstantDown),
-        time_constant_up_(kDefaultTimeConstantUp) {
+	  : ModelPlugin(),
+		MotorModel(),
+		command_sub_topic_(kDefaultCommandSubTopic),
+		motor_failure_sub_topic_(kDefaultMotorFailureNumSubTopic),
+		motor_speed_pub_topic_(kDefaultMotorVelocityPubTopic),
+		motor_number_(0),
+		motor_Failure_Number_(0),
+		turning_direction_(turning_direction::CW),
+		max_force_(kDefaultMaxForce),
+		max_rot_velocity_(kDefaulMaxRotVelocity),
+		moment_constant_(kDefaultMomentConstant),
+		motor_constant_(kDefaultMotorConstant),
+	  //motor_test_sub_topic_(kDefaultMotorTestSubTopic),
+		ref_motor_rot_vel_(0.0),
+		rolling_moment_coefficient_(kDefaultRollingMomentCoefficient),
+		rotor_drag_coefficient_(kDefaultRotorDragCoefficient),
+		rotor_velocity_slowdown_sim_(kDefaultRotorVelocitySlowdownSim),
+		time_constant_down_(kDefaultTimeConstantDown),
+		time_constant_up_(kDefaultTimeConstantUp) {
   }
 
   virtual ~GazeboMotorModel();
 
   virtual void InitializeParams();
+
   virtual void Publish();
   //void testProto(MotorSpeedPtr &msg);
  protected:
   virtual void UpdateForcesAndMoments();
+
   /// \brief A function to check the motor_Failure_Number_ and stimulate motor fail
   /// \details Doing joint_->SetVelocity(0,0) for the flagged motor to fail
   virtual void UpdateMotorFail();
+
   virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+
   virtual void OnUpdate(const common::UpdateInfo & /*_info*/);
+
+  virtual void OnRosMsg(const std_msgs::Float32ConstPtr &_msg);
+
+  virtual void QueueThread();
 
  private:
   std::string command_sub_topic_;
@@ -117,7 +130,8 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   int motor_number_;
   int turning_direction_;
 
-  int motor_Failure_Number_; /*!< motor_Failure_Number is (motor_number_ + 1) as (0) is considered no_fail. Publish accordingly */
+  int
+	  motor_Failure_Number_; /*!< motor_Failure_Number is (motor_number_ + 1) as (0) is considered no_fail. Publish accordingly */
   int tmp_motor_num; // A temporary variable used to print msg
 
   int screen_msg_flag = 1;
@@ -136,7 +150,8 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   transport::NodePtr node_handle_;
   transport::PublisherPtr motor_velocity_pub_;
   transport::SubscriberPtr command_sub_;
-  transport::SubscriberPtr motor_failure_sub_; /*!< Subscribing to motor_failure_sub_topic_; receiving motor number to fail, as an integer */
+  transport::SubscriberPtr
+	  motor_failure_sub_; /*!< Subscribing to motor_failure_sub_topic_; receiving motor number to fail, as an integer */
 
   physics::ModelPtr model_;
   physics::JointPtr joint_;
@@ -147,15 +162,22 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   event::ConnectionPtr updateConnection_;
 
   boost::thread callback_queue_thread_;
-  void QueueThread();
+
   std_msgs::msgs::Float turning_velocity_msg_;
+
   void VelocityCallback(CommandMotorSpeedPtr &rot_velocities);
-  void MotorFailureCallback(const boost::shared_ptr<const msgs::Int> &fail_msg);  /*!< Callback for the motor_failure_sub_ subscriber */
-  std::unique_ptr<FirstOrderFilter<double>>  rotor_velocity_filter_;
+
+  void MotorFailureCallback(
+	  const boost::shared_ptr<const msgs::Int> &fail_msg);  /*!< Callback for the motor_failure_sub_ subscriber */
+  std::unique_ptr<FirstOrderFilter<double>> rotor_velocity_filter_;
 /*
   // Protobuf test
   std::string motor_test_sub_topic_;
   transport::SubscriberPtr motor_sub_;
 */
+  std::unique_ptr<ros::NodeHandle> rosNode;
+  ros::Subscriber rosSub;
+  ros::CallbackQueue rosQueue;
+  std::thread rosQueueThread;
 };
 }

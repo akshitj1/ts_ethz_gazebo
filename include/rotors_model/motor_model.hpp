@@ -24,34 +24,36 @@
 
 #include <Eigen/Eigen>
 
-class MotorModel
-{
-  public:
-    MotorModel()
-        : motor_rot_vel_(0),
-          ref_motor_rot_vel_(0),
-          prev_sim_time_(0),
-          sampling_time_(0.01) {}
-    virtual ~MotorModel() {}
-    void GetMotorVelocity(double &result) const {
-      result = motor_rot_vel_;
-    }
-    void SetReferenceMotorVelocity(double ref_motor_rot_vel) {
-      ref_motor_rot_vel_ = ref_motor_rot_vel;
-    }
+class MotorModel {
+ public:
+  MotorModel()
+	  : motor_rot_vel_(0),
+		ref_motor_rot_vel_(0),
+		prev_sim_time_(0),
+		sampling_time_(0.01) {}
 
-    virtual void InitializeParams() = 0;
-    virtual void Publish() = 0;
+  virtual ~MotorModel() {}
 
-  protected:
-    double motor_rot_vel_;
-    double ref_motor_rot_vel_;
-    double prev_ref_motor_rot_vel_;
-    double prev_sim_time_;
-    double sampling_time_;
+  void GetMotorVelocity(double &result) const {
+	result = motor_rot_vel_;
+  }
 
+  void SetReferenceMotorVelocity(double ref_motor_rot_vel) {
+	ref_motor_rot_vel_ = ref_motor_rot_vel;
+  }
 
-    virtual void UpdateForcesAndMoments() = 0;
+  virtual void InitializeParams() = 0;
+
+  virtual void Publish() = 0;
+
+ protected:
+  double motor_rot_vel_;
+  double ref_motor_rot_vel_;
+  double prev_ref_motor_rot_vel_;
+  double prev_sim_time_;
+  double sampling_time_;
+
+  virtual void UpdateForcesAndMoments() = 0;
 };
 
 #endif // ROTORS_MODEL_MOTOR_MODEL_H

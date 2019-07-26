@@ -37,21 +37,21 @@ namespace gazebo {
 
 // Default values for use with ADIS16448 IMU
 static constexpr double kDefaultAdisGyroscopeNoiseDensity =
-    2.0 * 35.0 / 3600.0 / 180.0 * M_PI;
+	2.0 * 35.0 / 3600.0 / 180.0 * M_PI;
 static constexpr double kDefaultAdisGyroscopeRandomWalk =
-    2.0 * 4.0 / 3600.0 / 180.0 * M_PI;
+	2.0 * 4.0 / 3600.0 / 180.0 * M_PI;
 static constexpr double kDefaultAdisGyroscopeBiasCorrelationTime =
-    1.0e+3;
+	1.0e+3;
 static constexpr double kDefaultAdisGyroscopeTurnOnBiasSigma =
-    0.5 / 180.0 * M_PI;
+	0.5 / 180.0 * M_PI;
 static constexpr double kDefaultAdisAccelerometerNoiseDensity =
-    2.0 * 2.0e-3;
+	2.0 * 2.0e-3;
 static constexpr double kDefaultAdisAccelerometerRandomWalk =
-    2.0 * 3.0e-3;
+	2.0 * 3.0e-3;
 static constexpr double kDefaultAdisAccelerometerBiasCorrelationTime =
-    300.0;
+	300.0;
 static constexpr double kDefaultAdisAccelerometerTurnOnBiasSigma =
-    20.0e-3 * 9.8;
+	20.0e-3 * 9.8;
 // Earth's gravity in Zurich (lat=+47.3667degN, lon=+8.5500degE, h=+500m, WGS84)
 static constexpr double kDefaultGravityMagnitude = 9.8068;
 
@@ -81,38 +81,40 @@ struct ImuParameters {
   double gravity_magnitude;
 
   ImuParameters()
-      : gyroscope_noise_density(kDefaultAdisGyroscopeNoiseDensity),
-        gyroscope_random_walk(kDefaultAdisGyroscopeRandomWalk),
-        gyroscope_bias_correlation_time(
-            kDefaultAdisGyroscopeBiasCorrelationTime),
-        gyroscope_turn_on_bias_sigma(kDefaultAdisGyroscopeTurnOnBiasSigma),
-        accelerometer_noise_density(kDefaultAdisAccelerometerNoiseDensity),
-        accelerometer_random_walk(kDefaultAdisAccelerometerRandomWalk),
-        accelerometer_bias_correlation_time(
-            kDefaultAdisAccelerometerBiasCorrelationTime),
-        accelerometer_turn_on_bias_sigma(
-            kDefaultAdisAccelerometerTurnOnBiasSigma),
-        gravity_magnitude(kDefaultGravityMagnitude) {}
+	  : gyroscope_noise_density(kDefaultAdisGyroscopeNoiseDensity),
+		gyroscope_random_walk(kDefaultAdisGyroscopeRandomWalk),
+		gyroscope_bias_correlation_time(
+			kDefaultAdisGyroscopeBiasCorrelationTime),
+		gyroscope_turn_on_bias_sigma(kDefaultAdisGyroscopeTurnOnBiasSigma),
+		accelerometer_noise_density(kDefaultAdisAccelerometerNoiseDensity),
+		accelerometer_random_walk(kDefaultAdisAccelerometerRandomWalk),
+		accelerometer_bias_correlation_time(
+			kDefaultAdisAccelerometerBiasCorrelationTime),
+		accelerometer_turn_on_bias_sigma(
+			kDefaultAdisAccelerometerTurnOnBiasSigma),
+		gravity_magnitude(kDefaultGravityMagnitude) {}
 };
 
 class GazeboImuPlugin : public ModelPlugin {
  public:
 
   GazeboImuPlugin();
+
   ~GazeboImuPlugin();
 
   void InitializeParams();
+
   void Publish();
 
  protected:
   void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
 
   void addNoise(
-      Eigen::Vector3d* linear_acceleration,
-      Eigen::Vector3d* angular_velocity,
-      const double dt);
+	  Eigen::Vector3d *linear_acceleration,
+	  Eigen::Vector3d *angular_velocity,
+	  const double dt);
 
-  void OnUpdate(const common::UpdateInfo&);
+  void OnUpdate(const common::UpdateInfo &);
 
  private:
   std::string namespace_;
